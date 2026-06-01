@@ -1,16 +1,19 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useLicense } from "../context/LicenseContext";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function FilesVault() {
   const { hasFeature } = useLicense();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const inputRef = useRef(null);
   const [files, setFiles] = useState([]);
   const [status, setStatus] = useState("");
   const [preview, setPreview] = useState(null);
 
   const STORAGE_KEY = "files_vault_files";
+  const ACTIVITY_KEY = "files_vault_activity";
 
   useEffect(() => {
     try {
@@ -23,6 +26,17 @@ export default function FilesVault() {
       // ignore parse errors
     }
   }, []);
+
+  function addActivity(entry) {
+    try {
+      const raw = localStorage.getItem(ACTIVITY_KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      arr.unshift(entry);
+      localStorage.setItem(ACTIVITY_KEY, JSON.stringify(arr));
+    } catch (e) {
+      // ignore
+    }
+  }
 
   if (!hasFeature("files_vault")) {
     return (
@@ -71,6 +85,19 @@ export default function FilesVault() {
       })
     );
 
+    // record upload activities
+    const username = (user && (user.email || user.id)) || 'anonymous';
+    const activities = mapped.map((f) => ({
+      id: `act-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      type: 'uploaded',
+      fileId: f.id,
+      fileName: f.name,
+      user: username,
+      timestamp: f.createdAt,
+    }));
+
+    activities.forEach(addActivity);
+
     setFiles((s) => {
       const next = [...mapped, ...s];
       try {
@@ -84,11 +111,21 @@ export default function FilesVault() {
   }
 
   function handleDelete(id) {
+    const username = (user && (user.email || user.id)) || 'anonymous';
     setFiles((s) => {
       const next = s.filter((f) => f.id !== id);
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       } catch (err) {}
+      // activity
+      addActivity({
+        id: `act-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        type: 'deleted',
+        fileId: id,
+        fileName: null,
+        user: username,
+        timestamp: new Date().toISOString(),
+      });
       return next;
     });
     setStatus('File removed');
@@ -104,6 +141,15 @@ export default function FilesVault() {
     } catch (e) {
       setStatus('Copy not available in this environment');
     }
+    const username = (user && (user.email || user.id)) || 'anonymous';
+    addActivity({
+      id: `act-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      type: 'shared',
+      fileId: f.id,
+      fileName: f.name,
+      user: username,
+      timestamp: new Date().toISOString(),
+    });
   }
 
   function openPreview(id) {

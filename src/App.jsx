@@ -42,6 +42,8 @@ import CRM from "./pages/CRM";
 import DeveloperAPIs from "./pages/DeveloperAPIs";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import FilesVaultShare from "./pages/FilesVaultShare";
+import ExecutiveCenter from "./pages/ExecutiveCenter";
+import RequireFeature from "./components/RequireFeature";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AuthProtectedRoute from "./components/AuthProtectedRoute";
 import TierProtectedRoute from "./components/TierProtectedRoute";
@@ -163,6 +165,18 @@ function AnimatedRoutes() {
               <TierProtectedRoute requiredTier="standard">
                 <motion.div variants={pageVariants}><FilesVaultShare /></motion.div>
               </TierProtectedRoute>
+            </AuthProtectedRoute>
+          }
+        />
+        <Route
+          path="/executive-center"
+          element={
+            <AuthProtectedRoute>
+              <RequireFeature feature="analytics">
+                <TierProtectedRoute requiredTier="premium">
+                  <motion.div variants={pageVariants}><ExecutiveCenter /></motion.div>
+                </TierProtectedRoute>
+              </RequireFeature>
             </AuthProtectedRoute>
           }
         />
