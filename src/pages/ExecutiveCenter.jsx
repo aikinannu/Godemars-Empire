@@ -113,14 +113,12 @@ export default function ExecutiveCenter() {
 
       <div className="mt-6 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-white">Activity Timeline</h2>
-        {hasFeature('analytics') ? (
+        <RequireFeature feature="analytics">
           <div className="flex gap-2">
             <button onClick={exportActivityCSV} className="rounded-2xl bg-yellow-500 px-3 py-2 text-black font-semibold">Export Activity</button>
             <button onClick={exportSummaryCSV} className="rounded-2xl border border-gray-700 px-3 py-2 text-white">Export Summary</button>
           </div>
-        ) : (
-          <div className="text-sm text-yellow-300">Analytics feature required to export (<a href="/license" className="underline">Upgrade</a>).</div>
-        )}
+        </RequireFeature>
       </div>
 
       <div className="mt-4 space-y-2">

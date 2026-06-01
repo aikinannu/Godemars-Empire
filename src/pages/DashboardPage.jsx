@@ -140,8 +140,14 @@ const DashboardPage = () => {
                   <div className="text-xs text-gray-400">{(f.size/1024).toFixed(1)} KB</div>
                 </div>
                 <div className="flex gap-2 items-center">
-                  <button onClick={() => navigate(`/files-vault/share/${encodeURIComponent(f.id)}`)} className="text-sm text-yellow-300 underline">Open</button>
-                  <button onClick={() => navigate('/files-vault')} className="text-sm text-gray-300 underline">Manage</button>
+                  {hasFeature('files_vault') ? (
+                    <>
+                      <button onClick={() => navigate(`/files-vault/share/${encodeURIComponent(f.id)}`)} className="text-sm text-yellow-300 underline">Open</button>
+                      <button onClick={() => navigate('/files-vault')} className="text-sm text-gray-300 underline">Manage</button>
+                    </>
+                  ) : (
+                    <button onClick={(e) => { e.preventDefault(); navigate('/license'); }} className="text-sm text-yellow-300 underline">Upgrade</button>
+                  )}
                 </div>
               </li>
             ))}
