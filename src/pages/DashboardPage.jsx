@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { NAV_ITEMS } from "../config/navigation";
 import { hasTierAccess, normalizeTier, formatTierLabel } from "../utils/tierUtils";
@@ -12,6 +12,17 @@ const DashboardPage = () => {
   const currentTier = normalizeTier(membershipTier);
   const navigate = useNavigate();
   const { hasFeature } = useLicense();
+  const [recentFiles, setRecentFiles] = useState([]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('files_vault_files');
+      if (raw) {
+        const parsed = JSON.parse(raw) || [];
+        setRecentFiles(parsed.slice(0, 4));
+      }
+    } catch (e) {}
+  }, []);
 
   const stats = [
     {
@@ -112,6 +123,29 @@ const DashboardPage = () => {
               <ChevronRight size={16} className="text-gray-500 group-hover:text-yellow-400 transition" />
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* Recent Files (integrates Files Vault) */}
+      <div className="rounded-2xl border border-gray-700 bg-gray-900/30 p-6">
+        <h2 className="text-lg font-semibold text-white mb-3">Recent Files</h2>
+        <p className="text-sm text-gray-400 mb-4">Quick access to files uploaded in the Files Vault.</p>
+        <div>
+          {recentFiles.length === 0 && <div className="text-gray-400">No recent files.</div>}
+          <ul className="space-y-2">
+            {recentFiles.map((f) => (
+              <li key={f.id} className="flex items-center justify-between bg-gray-800/40 p-3 rounded">
+                <div>
+                  <div className="text-sm text-white font-medium">{f.name}</div>
+                  <div className="text-xs text-gray-400">{(f.size/1024).toFixed(1)} KB</div>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <button onClick={() => navigate(`/files-vault/share/${encodeURIComponent(f.id)}`)} className="text-sm text-yellow-300 underline">Open</button>
+                  <button onClick={() => navigate('/files-vault')} className="text-sm text-gray-300 underline">Manage</button>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
 
