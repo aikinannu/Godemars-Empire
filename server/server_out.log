@@ -1,0 +1,26 @@
+Redis disabled via DISABLE_REDIS/NO_REDIS; skipping initialization.
+
+✓ API Gateway running on http://localhost:3000
+  License Server: http://localhost:8001
+  CORS Origin: http://localhost:3002
+
+Users table ensured
+Refresh tokens table ensured
+Posts table ensured
+Comments table ensured
+Likes table ensured
+Communities table ensured
+Community members table ensured
+Conversations table ensured
+Messages table ensured
+User relationships table ensured
+User favorites table ensured
+Email verification tokens table ensured
+Two-factor settings table ensured
+Backup codes table ensured
+OAuth profiles table ensured
+Login activity table ensured
+Security events table ensured
+All social feature tables ensured
+api-endpoints: randomBytes typeof function
+Wrote email to local outbox: C:\Users\USER\Desktop\Software Programming\GodemarsEmpire2\server\outbox\1780210400057-blnxp7rv.html

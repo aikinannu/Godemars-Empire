@@ -1,11 +1,13 @@
 // src/components/Footer.jsx
 import React, { useState } from "react";
+import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router-dom";
 import { 
   FaInstagram, FaLinkedin, FaYoutube, FaTiktok, FaSnapchat, 
   FaChevronUp, FaChevronDown 
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLocation } from "react-router-dom";
 
 const Footer = () => {
   const [expanded, setExpanded] = useState(false);
@@ -15,6 +17,27 @@ const Footer = () => {
     "Domains", "Team", "Careers", "Contact"
   ];
 
+  const { isAuthenticated } = useAuth();
+  const location = useLocation();
+
+  // Pages where footer should remain visible even after login
+  const ALWAYS_SHOW_ON = [
+    "/",
+    "/about",
+    "/purpose",
+    "/vision",
+    "/domains",
+    "/team",
+    "/careers",
+    "/contact",
+    "/license",
+  ];
+
+  const path = (location.pathname || "/").replace(/\/+$/g, "").toLowerCase() || "/";
+  const shouldShow = !isAuthenticated || ALWAYS_SHOW_ON.includes(path);
+
+  if (!shouldShow) return null;
+
   return (
     <footer className="fixed bottom-0 left-0 w-full z-50">
       {/* Gradient background */}
@@ -23,9 +46,9 @@ const Footer = () => {
         {/* Toggle Bar */}
         <div
           onClick={() => setExpanded(!expanded)}
-          className="cursor-pointer flex justify-center items-center py-2 bg-gray-800/90 hover:bg-gray-700/90 transition"
+          className="cursor-pointer flex justify-center items-center py-1 bg-gray-800/90 hover:bg-gray-700/90 transition"
         >
-          {expanded ? <FaChevronDown /> : <FaChevronUp />}
+          {expanded ? <FaChevronDown size={14} /> : <FaChevronUp size={14} />}
         </div>
 
         {/* Expandable Footer Content */}

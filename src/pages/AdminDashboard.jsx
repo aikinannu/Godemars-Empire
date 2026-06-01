@@ -129,38 +129,37 @@ export default function AdminDashboard() {
         {/* Charts Grid */}
         <RequireFeature feature="analytics">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          {/* Login Trend */}
-          <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
-            <h2 className="text-lg font-bold text-yellow-400 mb-4">Login Trend</h2>
-            <div className="space-y-3">
-              {loginTrend.map((day) => (
-                <div key={day.date} className="flex items-center justify-between">
-                  <span className="text-gray-300 text-sm font-semibold">{day.date}</span>
-                  <div className="flex gap-4 flex-1 ml-4">
-                    <div className="flex items-center gap-2">
-                      <div
-                        style={{ width: `${day.successful * 0.3}px` }}
-                        className="h-6 bg-green-500 rounded"
-                      ></div>
-                      <span className="text-green-400 text-sm">{day.successful}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div
-                        style={{ width: `${day.failed * 3}px` }}
-                        className="h-6 bg-red-500 rounded"
-                      ></div>
-                      <span className="text-red-400 text-sm">{day.failed}</span>
+            {/* Login Trend */}
+            <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+              <h2 className="text-lg font-bold text-yellow-400 mb-4">Login Trend</h2>
+              <div className="space-y-3">
+                {loginTrend.map((day) => (
+                  <div key={day.date} className="flex items-center justify-between">
+                    <span className="text-gray-300 text-sm font-semibold">{day.date}</span>
+                    <div className="flex gap-4 flex-1 ml-4">
+                      <div className="flex items-center gap-2">
+                        <div
+                          style={{ width: `${day.successful * 0.3}px` }}
+                          className="h-6 bg-green-500 rounded"
+                        ></div>
+                        <span className="text-green-400 text-sm">{day.successful}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div
+                          style={{ width: `${day.failed * 3}px` }}
+                          className="h-6 bg-red-500 rounded"
+                        ></div>
+                        <span className="text-red-400 text-sm">{day.failed}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        </RequireFeature>
 
-          {/* Auth Methods Distribution */}
-          <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
-            <h2 className="text-lg font-bold text-yellow-400 mb-4">Authentication Methods</h2>
+            {/* Auth Methods Distribution */}
+            <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+              <h2 className="text-lg font-bold text-yellow-400 mb-4">Authentication Methods</h2>
             <div className="space-y-4">
               {authMethods.map((method) => {
                 const percentage = ((method.value / 1250) * 100).toFixed(1);
@@ -227,7 +226,8 @@ export default function AdminDashboard() {
               })}
             </div>
           </div>
-        </div>
+          </div>
+        </RequireFeature>
 
         {/* Recent Security Events */}
         <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">

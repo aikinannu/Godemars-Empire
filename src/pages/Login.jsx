@@ -1,135 +1,149 @@
 import React, { useState } from "react";
-import { loginWithEmail, signInWithGoogle, resetPassword } from "../firebase";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { Eye, EyeOff, AlertCircle, CheckCircle, Loader } from "lucide-react";
+import SocialAuthButtons from "../components/SocialAuthButtons";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
   const navigate = useNavigate();
+  const { login, error: authError } = useAuth();
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setIsLoading(true);
+    setSuccessMessage("");
+
     try {
-      await loginWithEmail(email, password);
-      navigate("/feed");
+      await login(email, password);
+      setSuccessMessage("Login successful! Redirecting...");
+      setTimeout(() => navigate("/homefeed"), 1500);
     } catch (err) {
-      setError("Invalid credentials or network error. Please try again.");
-      console.error("Login error:", err);
+      // Error is handled by the auth context and displayed via authError
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleResetPassword = async () => {
-    if (!email) {
-      setError("Please enter your email address first.");
-      return;
-    }
+  const handleSocialAuth = async (provider) => {
+    setIsLoading(true);
     try {
-      await resetPassword(email);
-      setMessage("Password reset email sent! Please check your inbox.");
-      setError("");
+      // In a real app, redirect to OAuth provider
+      // window.location.href = `/api/v1/auth/${provider}`;
+      console.log(`Starting ${provider} authentication...`);
+      // Simulate OAuth flow
+      setTimeout(() => {
+        setSuccessMessage(`${provider} authentication in progress...`);
+        setIsLoading(false);
+      }, 1500);
     } catch (err) {
-      console.error("Password reset error:", err);
-      setError("Error sending password reset email.");
+      console.error(`${provider} auth error:`, err);
+      setIsLoading(false);
     }
   };
+
+  const isFormValid = email.trim() && password && password.length >= 6;
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-black via-gray-900 to-black text-white">
-      <div className="w-full max-w-md bg-black/70 p-8 rounded-2xl shadow-2xl border border-yellow-600 backdrop-blur-lg">
-        <h2 className="text-3xl font-bold text-center text-yellow-500 mb-6">
-          Welcome Back to Godemar’s Empire
-        </h2>
+    <div className="min-h-screen flex items-center justify-center bg-black text-white px-4">
+      <div className="max-w-md w-full p-8 bg-gray-900/90 border border-yellow-600 rounded-3xl shadow-2xl">
+        <h1 className="text-3xl font-bold text-yellow-400 mb-2 text-center">Login</h1>
+        <p className="text-gray-400 text-center mb-6">Sign in with your credentials</p>
 
-        {error && <p className="text-red-500 text-sm text-center mb-2">{error}</p>}
-        {message && <p className="text-green-500 text-sm text-center mb-2">{message}</p>}
+        {successMessage && (
+          <div className="mb-4 p-3 bg-green-900/20 border border-green-600 rounded-lg flex items-center gap-2">
+            <CheckCircle size={18} className="text-green-400 flex-shrink-0" />
+            <span className="text-green-300 text-sm">{successMessage}</span>
+          </div>
+        )}
 
-        <form onSubmit={handleLogin} className="space-y-5">
-          {/* Email Field */}
+        {authError && (
+          <div className="mb-4 p-3 bg-red-900/20 border border-red-600 rounded-lg flex items-start gap-2">
+            <AlertCircle size={18} className="text-red-400 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-red-300 text-sm font-semibold">Login Failed</p>
+              <p className="text-red-300 text-xs mt-1">{authError}</p>
+            </div>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block mb-2 text-sm font-semibold text-gray-300">Email</label>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+              Email
+            </label>
             <input
               type="email"
-              placeholder="Enter your email"
+              id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-3 bg-gray-800 text-white rounded-xl border border-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              placeholder="you@example.com"
+              disabled={isLoading}
+              className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500 disabled:opacity-50"
               required
             />
           </div>
 
-          {/* Password Field */}
           <div>
-            <label className="block mb-2 text-sm font-semibold text-gray-300">Password</label>
+            <div className="flex justify-between items-center mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-300">
+                Password
+              </label>
+              <Link to="/reset-password" className="text-xs text-yellow-400 hover:text-yellow-300">
+                Forgot password?
+              </Link>
+            </div>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
+                id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-3 bg-gray-800 text-white rounded-xl border border-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 pr-16"
+                placeholder="••••••••"
+                disabled={isLoading}
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500 disabled:opacity-50"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3 text-yellow-400 hover:text-yellow-300 text-sm"
+                disabled={isLoading}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300 disabled:opacity-50"
               >
-                {showPassword ? "Hide" : "Show"}
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
           </div>
 
-          {/* Forgot Password Link */}
-          <div className="text-right">
-            <button
-              type="button"
-              onClick={handleResetPassword}
-              className="text-yellow-500 text-sm hover:underline"
-            >
-              Forgot Password?
-            </button>
-          </div>
-
-          {/* Login Button */}
           <button
             type="submit"
-            className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-semibold py-3 rounded-xl transition duration-300"
+            disabled={!isFormValid || isLoading}
+            className="w-full py-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition flex items-center justify-center gap-2"
           >
-            Login
+            {isLoading && <Loader size={16} />}
+            {isLoading ? "Logging in..." : "Login"}
           </button>
 
-          {/* Google Sign-In Button */}
-          <button
-            type="button"
-            onClick={async () => {
-              try {
-                await signInWithGoogle();
-                navigate("/feed");
-              } catch (err) {
-                console.error("Google Sign-In Error:", err);
-                setError("Failed to sign in with Google.");
-              }
-            }}
-            className="w-full bg-gray-800 hover:bg-gray-700 text-yellow-400 font-medium py-3 rounded-xl border border-yellow-600 transition duration-300"
-          >
-            Continue with Google
-          </button>
+          <SocialAuthButtons isLoading={isLoading} onSocialAuth={handleSocialAuth} />
         </form>
 
-        {/* Signup Redirect */}
-        <p className="text-center text-gray-400 text-sm mt-6">
-          Don’t have an account?{" "}
-          <span
-            className="text-yellow-500 cursor-pointer hover:underline"
-            onClick={() => navigate("/signup")}
-          >
-            Sign up here
-          </span>
-        </p>
+        <div className="mt-6 space-y-3">
+          <p className="text-center text-gray-400 text-sm">
+            Don't have an account?{" "}
+            <Link to="/signup" className="text-yellow-400 hover:text-yellow-300 underline">
+              Sign up
+            </Link>
+          </p>
+          <p className="text-center text-gray-400 text-sm">
+            <Link to="/license" className="text-yellow-400 hover:text-yellow-300 underline">
+              Activate License
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

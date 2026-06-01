@@ -1,0 +1,22 @@
+{
+  "name": "gd-license-proxy",
+  "version": "1.0.0",
+  "private": true,
+  "main": "proxy.js",
+  "scripts": {
+    "start": "node proxy.js",
+    "dev": "node api-gateway.js",
+    "import:license-users": "node import_license_users.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.6",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
+    "node-fetch": "^2.6.7",
+    "nodemailer": "^6.9.3",
+    "pg": "^8.10.0",
+    "redis": "^4.6.7",
+    "uuid": "^9.0.1"
+  }
+}

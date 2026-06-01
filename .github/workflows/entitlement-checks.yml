@@ -1,0 +1,29 @@
+name: Entitlement smoke checks
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  entitlement:
+    name: Entitlement Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Run entitlement script (pro)
+        run: node scripts/check_access.js tests/fixtures/pro.jwt
+
+      - name: Run entitlement script (free)
+        run: node scripts/check_access.js tests/fixtures/free.jwt

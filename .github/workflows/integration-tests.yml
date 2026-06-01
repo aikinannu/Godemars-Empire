@@ -1,0 +1,95 @@
+name: Integration tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: gdwb_user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: gdwb_app
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U gdwb_user" 
+          --health-interval 10s 
+          --health-timeout 5s 
+          --health-retries 5
+      license-server:
+        image: php:8.2-cli
+        ports:
+          - 8001:8001
+        options: >-
+          --entrypoint ""
+        # We will start the license server from a step that mounts the repo as a volume
+        volumes: ${{ github.workspace }}:/workspace
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install server deps
+        working-directory: server
+        run: |
+          npm ci
+
+      - name: Start license server (PHP) in background
+        run: |
+          php -S 0.0.0.0:8001 -t license-server/ license-server/index.php &
+        shell: bash
+
+      - name: Wait for license server
+        run: |
+          for i in {1..20}; do
+            if curl -sSf http://localhost:8001/health >/dev/null 2>&1; then
+              echo "license server up"; break
+            fi
+            sleep 1
+          done
+        shell: bash
+
+      - name: Start API gateway
+        working-directory: server
+        env:
+          JWT_SECRET: test_jwt_secret
+          COOKIE_SECURE: 'false'
+          CORS_ORIGIN: 'http://localhost:3001'
+          PORT: 3000
+          LICENSE_SERVER_URL: http://host.docker.internal:8001
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: gdwb_user
+          DB_PASSWORD: password
+          DB_NAME: gdwb_app
+        run: |
+          node api-gateway.js &
+          sleep 1
+        shell: bash
+
+      - name: Wait for API gateway
+        run: |
+          for i in {1..20}; do
+            if curl -sSf http://localhost:3000/health >/dev/null 2>&1; then
+              echo "api gateway up"; break
+            fi
+            sleep 1
+          done
+        shell: bash
+
+      - name: Run integration test
+        working-directory: server
+        run: |
+          node test_integration.js
+        shell: bash

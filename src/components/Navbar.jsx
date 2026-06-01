@@ -1,123 +1,164 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext.jsx";
+import React from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Search, Bell, MessageCircle, Menu as MenuIcon, UserCircle } from "lucide-react";
+import logo from "../assets/logo.png";
+import { useUI } from "../context/UIContext";
+import { useAuth } from "../context/AuthContext";
+import LogoDropdown from "./LogoDropdown";
 
-const Navbar = () => {
-  const { user, logout } = useAuth();
-  const [mobileOpen, setMobileOpen] = useState(false);
+const Navbar = ({ onSearchClick }) => {
+  // mobile inline menu removed — we use global SideDrawer for mobile navigation
+
+  const ui = useUI();
+  const { isAuthenticated } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
 
-  const handleLogout = async () => {
+  const handleMenuClick = () => {
+    // open the shared SideDrawer
     try {
-      await logout();
-      navigate("/login");
-    } catch (error) {
-      console.error("Logout Error:", error);
+      ui.openDrawer();
+    } catch (e) {
+      // ignore if UIProvider not present
     }
   };
 
-  const toggleMobileMenu = () => setMobileOpen(!mobileOpen);
+  const handleProfileClick = () => {
+    navigate("/profile");
+  };
+
+  const allowedHeaderPaths = [
+    "/",
+    "/about",
+    "/purpose",
+    "/careers",
+    "/vision",
+    "/team",
+    "/contact",
+    "/license",
+    "/domains",
+  ];
+
+  const routeTitles = {
+    "/dashboard": "Dashboard",
+    "/profile": "Profile",
+    "/premium": "Premium",
+    "/feed": "Feed",
+    "/settings": "Settings",
+    "/analytics": "Analytics",
+    "/billing": "Billing",
+    "/developer-apis": "Developer APIs",
+    "/integrations": "Integrations",
+  };
+
+  const currentPath = (location.pathname || "").toLowerCase().replace(/\/+$/g, "") || "/";
+  const showFullHeader = !isAuthenticated || allowedHeaderPaths.includes(currentPath);
+  const pageTitle = routeTitles[currentPath] || (currentPath === "/" ? "Home" : currentPath.replace("/", "").split("-").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" "));
 
   return (
-    <nav className="w-full bg-gradient-to-r from-gray-900 via-black to-gray-800 text-white shadow-lg sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
+    <nav className={`w-full bg-gradient-to-r from-gray-900 via-black to-gray-800 text-white shadow-lg sticky top-0 z-50`}>
+      <div className={`max-w-7xl mx-auto px-5 ${showFullHeader ? "py-2" : "py-1"} flex justify-between items-center`}>
         {/* Brand / Logo */}
-        <Link
-          to="/"
-          className="text-2xl font-extrabold tracking-wide text-yellow-400 hover:text-white transition duration-300"
-        >
-          Godemar’s Empire
-        </Link>
+        {isAuthenticated ? (
+          <LogoDropdown />
+        ) : (
+          <Link 
+            to="/homefeed" 
+            className="flex items-center gap-2 text-yellow-400 hover:text-white transition duration-300"
+          >
+            <img src={logo} alt="Godemar's Empire" className={`rounded-full ${showFullHeader ? "w-9 h-9" : "w-7 h-7"}`} />
+            {showFullHeader && <span className="font-extrabold tracking-wide text-lg">Godemar's Empire</span>}
+          </Link>
+        )}
 
-        {/* Desktop Menu */}
-        <div className="hidden md:flex space-x-8 items-center">
-          {!user ? (
+        <div className="hidden md:flex items-center gap-4">
+          {showFullHeader ? (
             <>
-              <Link to="/" className="hover:text-yellow-400 transition">Home</Link>
-              <Link to="/about" className="hover:text-yellow-400 transition">About</Link>
-              <Link to="/purpose" className="hover:text-yellow-400 transition">Purpose</Link>
-              <Link to="/careers" className="hover:text-yellow-400 transition">Careers</Link>
-              <Link
-                to="/login"
-                className="bg-yellow-400 text-black px-4 py-2 rounded-full hover:bg-yellow-500 transition"
-              >
-                Login
-              </Link>
-              <Link
-                to="/signup"
-                className="border border-yellow-400 px-4 py-2 rounded-full hover:bg-yellow-400 hover:text-black transition"
-              >
-                Sign Up
-              </Link>
+              <Link to="/homefeed" className="hover:text-yellow-400 transition text-sm">Home</Link>
+              <Link to="/about" className="hover:text-yellow-400 transition text-sm">About</Link>
+              <Link to="/purpose" className="hover:text-yellow-400 transition text-sm">Purpose</Link>
+              <Link to="/careers" className="hover:text-yellow-400 transition text-sm">Careers</Link>
+              <Link to="/vision" className="hover:text-yellow-400 transition text-sm">Vision</Link>
+              <Link to="/license" className="hover:text-yellow-400 transition text-sm">License</Link>
+              <Link to="/premium" className="hover:text-yellow-400 transition text-sm">Premium</Link>
+              <Link to="/contact" className="hover:text-yellow-400 transition text-sm">Contact</Link>
+              <div className="border-l border-gray-600 pl-6 flex space-x-3">
+                <Link to="/login" className="px-3 py-2 bg-gray-700 hover:bg-yellow-600 rounded transition text-sm">Login</Link>
+                <Link to="/signup" className="px-3 py-2 bg-yellow-600 hover:bg-yellow-700 rounded transition text-sm">Sign Up</Link>
+              </div>
             </>
           ) : (
             <>
-              <Link to="/dashboard" className="hover:text-yellow-400 transition">Dashboard</Link>
-              <Link to="/profile" className="hover:text-yellow-400 transition">Profile</Link>
-              <Link to="/careers" className="hover:text-yellow-400 transition">
-                Careers & Job Offers
-              </Link>
-              <Link to="/vision" className="hover:text-yellow-400 transition">Vision</Link>
-              <Link to="/team" className="hover:text-yellow-400 transition">Team</Link>
-              <Link to="/contact" className="hover:text-yellow-400 transition">Contact</Link>
-              <Link to="/about" className="hover:text-yellow-400 transition">About</Link>
-              <button
-                onClick={handleLogout}
-                className="bg-yellow-400 text-black px-4 py-2 rounded-full hover:bg-yellow-500 transition"
-              >
-                Logout
-              </button>
+              <div className="flex-1 flex justify-center">
+                <span className="text-sm md:text-base font-semibold uppercase tracking-wide text-white/90">
+                  {pageTitle}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={onSearchClick}
+                  className="text-yellow-400 p-2 rounded-md hover:bg-white/10 focus:outline-none"
+                  aria-label="Open search"
+                >
+                  <Search size={20} />
+                </button>
+                <button
+                  type="button"
+                  className="text-yellow-400 p-2 rounded-md hover:bg-white/10 focus:outline-none"
+                  aria-label="Open messages"
+                >
+                  <MessageCircle size={20} />
+                </button>
+                <button
+                  type="button"
+                  className="text-yellow-400 p-2 rounded-md hover:bg-white/10 focus:outline-none"
+                  aria-label="Notifications"
+                >
+                  <Bell size={20} />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleProfileClick}
+                  className="text-yellow-400 p-2 rounded-full bg-white/5 hover:bg-white/10 focus:outline-none"
+                  aria-label="Open profile"
+                >
+                  <UserCircle size={22} />
+                </button>
+              </div>
             </>
           )}
         </div>
 
-        {/* Mobile Toggle Button */}
-        <div className="md:hidden flex items-center">
-          <button
-            className="text-yellow-400 text-2xl focus:outline-none"
-            onClick={toggleMobileMenu}
-          >
-            {mobileOpen ? "✕" : "☰"}
-          </button>
-        </div>
+        {showFullHeader ? null : (
+          <div className="md:hidden flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onSearchClick}
+              className="text-yellow-400 p-2 rounded-md hover:bg-white/10 focus:outline-none"
+              aria-label="Open search"
+            >
+              <Search size={20} />
+            </button>
+            <button
+              type="button"
+              className="text-yellow-400 p-2 rounded-md hover:bg-white/10 focus:outline-none"
+              aria-label="Notifications"
+            >
+              <Bell size={20} />
+            </button>
+            <button
+              className="text-yellow-400 text-2xl focus:outline-none"
+              onClick={handleMenuClick}
+              aria-label="Open menu"
+            >
+              <MenuIcon size={24} />
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Mobile Menu */}
-      {mobileOpen && (
-        <div className="md:hidden bg-black px-6 py-4 space-y-3">
-          {!user ? (
-            <>
-              <Link to="/" onClick={toggleMobileMenu} className="block hover:text-yellow-400 transition">Home</Link>
-              <Link to="/about" onClick={toggleMobileMenu} className="block hover:text-yellow-400 transition">About</Link>
-              <Link to="/purpose" onClick={toggleMobileMenu} className="block hover:text-yellow-400 transition">Purpose</Link>
-              <Link to="/careers" onClick={toggleMobileMenu} className="block hover:text-yellow-400 transition">Careers</Link>
-              <Link to="/login" onClick={toggleMobileMenu} className="block hover:text-yellow-400 transition">Login</Link>
-              <Link to="/signup" onClick={toggleMobileMenu} className="block hover:text-yellow-400 transition">Sign Up</Link>
-            </>
-          ) : (
-            <>
-              <Link to="/dashboard" onClick={toggleMobileMenu} className="block hover:text-yellow-400 transition">Dashboard</Link>
-              <Link to="/profile" onClick={toggleMobileMenu} className="block hover:text-yellow-400 transition">Profile</Link>
-              <Link to="/careers" onClick={toggleMobileMenu} className="block hover:text-yellow-400 transition">
-                Careers & Job Offers
-              </Link>
-              <Link to="/vision" onClick={toggleMobileMenu} className="block hover:text-yellow-400 transition">Vision</Link>
-              <Link to="/team" onClick={toggleMobileMenu} className="block hover:text-yellow-400 transition">Team</Link>
-              <Link to="/contact" onClick={toggleMobileMenu} className="block hover:text-yellow-400 transition">Contact</Link>
-              <Link to="/about" onClick={toggleMobileMenu} className="block hover:text-yellow-400 transition">About</Link>
-              <button
-                onClick={() => {
-                  handleLogout();
-                  toggleMobileMenu();
-                }}
-                className="w-full bg-yellow-400 text-black py-2 rounded-full hover:bg-yellow-500 transition"
-              >
-                Logout
-              </button>
-            </>
-          )}
-        </div>
-      )}
+      {/* Inline mobile menu removed — use global drawer */}
     </nav>
   );
 };

@@ -1,0 +1,2 @@
+EmailService: SMTP not configured; using local file outbox at C:\Users\USER\Desktop\Software Programming\GodemarsEmpire2\server\outbox
+Warning: Using SameSite=None without secure cookies; browsers may refuse cookies in some contexts. Set COOKIE_SECURE=true in production and use HTTPS.

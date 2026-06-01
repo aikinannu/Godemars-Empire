@@ -1,0 +1,37 @@
+name: Playwright Entitlement Checks
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  playwright:
+    runs-on: ubuntu-latest
+    services:
+      license-server:
+        image: php:8.2-cli
+        ports:
+          - 8001:8001
+        options: >-
+          --health-cmd "php -S 0.0.0.0:8001 -t /workspace" --health-interval 5s --health-timeout 2s --health-retries 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm ci
+      - name: Build
+        run: npm run build
+      - name: Serve
+        run: npx http-server ./dist -p 3001 &
+      - name: Run Playwright entitlement script
+        run: node scripts/playwright_run.js
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: entitlement-screenshots
+          path: tests/playwright-screenshots

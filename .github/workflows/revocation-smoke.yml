@@ -1,0 +1,67 @@
+name: Gateway + License Revocation Smoke
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  gateway-smoke:
+    name: Gateway Revocation Smoke
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: gdwb_user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: gdwb_app
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U gdwb_user"
+          --health-interval 5s
+          --health-timeout 2s
+          --health-retries 30
+      license-server:
+        image: php:8.2-cli
+        ports:
+          - 8001:8001
+        options: >-
+          --entrypoint ""
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install server deps
+        working-directory: server
+        run: |
+          npm ci
+
+      - name: Start license server (PHP)
+        run: |
+          php -S 0.0.0.0:8001 -t license-server/ license-server/index.php &
+          sleep 1
+
+      - name: Start API gateway
+        working-directory: server
+        run: |
+          PORT=3000 JWT_SECRET=test_jwt_secret CORS_ORIGIN=http://localhost:3001 node api-gateway.js &
+          sleep 1
+
+      - name: Wait for services
+        run: |
+          for i in {1..20}; do if curl -sSf http://localhost:8001/health >/dev/null 2>&1; then break; fi; sleep 1; done
+          for i in {1..20}; do if curl -sSf http://localhost:3000/health >/dev/null 2>&1; then break; fi; sleep 1; done
+
+      - name: Run gateway integration test
+        working-directory: server
+        run: |
+          node test_integration.js

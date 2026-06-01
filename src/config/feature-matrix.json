@@ -1,0 +1,18 @@
+{
+  "/dashboard": { "title": "Dashboard", "features": [] },
+  "/executive-center": { "title": "Executive Center", "features": ["analytics", "sso", "priority_support", "webhooks", "files_vault"] },
+  "/cloud-infrastructure": { "title": "Cloud Infrastructure", "features": ["analytics", "webhooks", "files_vault"] },
+  "/cms-studio": { "title": "CMS Studio", "features": ["files_vault", "analytics", "webhooks"] },
+  "/files-vault": { "title": "Files Vault", "features": ["files_vault"] },
+  "/crm-erp": { "title": "CRM & ERP", "features": ["webhooks", "analytics", "files_vault", "priority_support"] },
+  "/marketing-hub": { "title": "Marketing Hub", "features": ["analytics", "webhooks", "files_vault"] },
+  "/e-banking": { "title": "E-Banking", "features": ["webhooks", "priority_support", "sso"] },
+  "/analytics": { "title": "Analytics", "features": ["analytics"] },
+  "/ai-operations": { "title": "AI Operations", "features": ["priority_support", "analytics", "webhooks"] },
+  "/security-center": { "title": "Security Center", "features": ["priority_support", "webhooks"] },
+  "/billing-licensing": { "title": "Billing & Licensing", "features": ["priority_support"] },
+  "/marketplace": { "title": "Marketplace", "features": ["webhooks", "priority_support"] },
+  "/integrations": { "title": "Integrations", "features": ["webhooks"] },
+  "/developer-apis": { "title": "Developer APIs", "features": ["analytics", "private_api"] },
+  "/settings": { "title": "Settings", "features": [] }
+}

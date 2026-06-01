@@ -79,7 +79,7 @@ export default function Home() {
 
         {/* Footer */}
         <motion.div
-          className="mt-12"
+          className="mt-12 mb-20"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1, transition: { delay: 2 } }}
         >
