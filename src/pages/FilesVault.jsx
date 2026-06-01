@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useLicense } from "../context/LicenseContext";
 import { useNavigate } from "react-router-dom";
 
@@ -8,6 +8,21 @@ export default function FilesVault() {
   const inputRef = useRef(null);
   const [files, setFiles] = useState([]);
   const [status, setStatus] = useState("");
+  const [preview, setPreview] = useState(null);
+
+  const STORAGE_KEY = "files_vault_files";
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setFiles(parsed || []);
+      }
+    } catch (e) {
+      // ignore parse errors
+    }
+  }, []);
 
   if (!hasFeature("files_vault")) {
     return (
@@ -28,31 +43,77 @@ export default function FilesVault() {
     );
   }
 
-  function onSelect(e) {
+  async function onSelect(e) {
     const chosen = Array.from(e.target.files || []);
     if (!chosen.length) return;
-    const mapped = chosen.map((f) => ({ id: `${Date.now()}-${f.name}`, name: f.name, size: f.size, url: URL.createObjectURL(f) }));
-    setFiles((s) => [...mapped, ...s]);
-    setStatus(`${chosen.length} file(s) added`);
-    // reset
+
+    const readFile = (file) =>
+      new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => resolve(null);
+        // only read as dataURL for smaller files
+        if (file.size <= 1_000_000) reader.readAsDataURL(file);
+        else resolve(null);
+      });
+
+    const mapped = await Promise.all(
+      chosen.map(async (f) => {
+        const dataUrl = await readFile(f);
+        return {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          name: f.name,
+          size: f.size,
+          type: f.type,
+          dataUrl: dataUrl,
+          createdAt: new Date().toISOString(),
+        };
+      })
+    );
+
+    setFiles((s) => {
+      const next = [...mapped, ...s];
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      } catch (err) {}
+      return next;
+    });
+
+    setStatus(`${mapped.length} file(s) added`);
     if (inputRef.current) inputRef.current.value = null;
   }
 
   function handleDelete(id) {
-    setFiles((s) => s.filter((f) => f.id !== id));
+    setFiles((s) => {
+      const next = s.filter((f) => f.id !== id);
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      } catch (err) {}
+      return next;
+    });
     setStatus('File removed');
   }
 
   function handleShare(id) {
     const f = files.find((x) => x.id === id);
     if (!f) return;
-    const url = `${window.location.origin}/files-vault/share/${encodeURIComponent(f.name)}`;
+    const url = `${window.location.origin}/files-vault/share/${encodeURIComponent(f.id)}`;
     try {
       navigator.clipboard.writeText(url);
       setStatus('Share link copied to clipboard');
     } catch (e) {
       setStatus('Copy not available in this environment');
     }
+  }
+
+  function openPreview(id) {
+    const f = files.find((x) => x.id === id);
+    if (!f) return;
+    setPreview(f);
+  }
+
+  function closePreview() {
+    setPreview(null);
   }
 
   return (
@@ -80,9 +141,9 @@ export default function FilesVault() {
         </div>
       </section>
 
-      <section aria-labelledby="files-heading" className="mt-6">
-        <h2 id="files-heading" className="text-lg font-semibold text-white">Stored files</h2>
-        <p className="mt-1 text-gray-400">Files stored in this session (in-memory).</p>
+        <section aria-labelledby="files-heading" className="mt-6">
+          <h2 id="files-heading" className="text-lg font-semibold text-white">Stored files</h2>
+          <p className="mt-1 text-gray-400">Files persisted to localStorage for this browser (demo only).</p>
 
         <div className="mt-4 overflow-x-auto">
           <table className="w-full text-left" role="table">
@@ -103,9 +164,9 @@ export default function FilesVault() {
                   <td className="p-2 text-gray-300">{(f.size/1024).toFixed(1)} KB</td>
                   <td className="p-2">
                     <div className="flex gap-2">
-                      <a href={f.url} target="_blank" rel="noreferrer" className="text-sm text-yellow-300 underline">View</a>
-                      <button onClick={() => handleShare(f.id)} className="text-sm text-gray-300 underline">Share</button>
-                      <button onClick={() => handleDelete(f.id)} className="text-sm text-red-400">Delete</button>
+                        <button onClick={() => openPreview(f.id)} className="text-sm text-yellow-300 underline">View</button>
+                        <button onClick={() => handleShare(f.id)} className="text-sm text-gray-300 underline">Share</button>
+                        <button onClick={() => handleDelete(f.id)} className="text-sm text-red-400">Delete</button>
                     </div>
                   </td>
                 </tr>
@@ -114,6 +175,35 @@ export default function FilesVault() {
           </table>
         </div>
       </section>
+      {preview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60" onClick={closePreview} />
+          <div className="relative z-10 max-w-3xl w-full mx-4 rounded-xl bg-gray-900 p-6 border border-gray-700">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-white">{preview.name}</h3>
+                <div className="text-sm text-gray-400">{(preview.size/1024).toFixed(1)} KB • {preview.type || 'unknown'}</div>
+              </div>
+              <div className="flex items-center gap-2">
+                {preview.dataUrl && (
+                  <a href={preview.dataUrl} download={preview.name} className="text-sm text-gray-300 underline">Download</a>
+                )}
+                <button onClick={closePreview} className="text-sm text-yellow-300">Close</button>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              {preview.dataUrl && preview.type && preview.type.startsWith('image/') ? (
+                <img src={preview.dataUrl} alt={preview.name} className="max-h-[60vh] w-auto mx-auto rounded" />
+              ) : preview.dataUrl ? (
+                <div className="text-sm text-gray-300">Preview available for download.</div>
+              ) : (
+                <div className="text-sm text-gray-400">Preview not available offline for this file.</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

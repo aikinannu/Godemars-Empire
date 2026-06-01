@@ -41,6 +41,7 @@ import FilesVault from "./pages/FilesVault";
 import CRM from "./pages/CRM";
 import DeveloperAPIs from "./pages/DeveloperAPIs";
 import AnalyticsPage from "./pages/AnalyticsPage";
+import FilesVaultShare from "./pages/FilesVaultShare";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AuthProtectedRoute from "./components/AuthProtectedRoute";
 import TierProtectedRoute from "./components/TierProtectedRoute";
@@ -151,6 +152,16 @@ function AnimatedRoutes() {
             <AuthProtectedRoute>
               <TierProtectedRoute requiredTier="standard">
                 <motion.div variants={pageVariants}><FilesVault /></motion.div>
+              </TierProtectedRoute>
+            </AuthProtectedRoute>
+          }
+        />
+        <Route
+          path="/files-vault/share/:id"
+          element={
+            <AuthProtectedRoute>
+              <TierProtectedRoute requiredTier="standard">
+                <motion.div variants={pageVariants}><FilesVaultShare /></motion.div>
               </TierProtectedRoute>
             </AuthProtectedRoute>
           }
